@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polls & Voting</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="navbar-logo">PollMaster</a>
+    
+            <div class="navbar-links">
+                <a href="/">Home</a>
+                <a href="/create">Create Poll</a>
+                <a href="/polls">Poll Results</a>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/contact">Contact Us</a>
+            </div>
+        </div>
+    </nav>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+        }
+    
+        .navbar {
+            background: rgba(19, 18, 18, 0.963); /* Transparent dark glass */
+            backdrop-filter: blur(8px); /* Frosted effect */
+            padding: 15px 30px;
+            border-bottom: 3px solid #00bfff;
+            display: flex;
+            justify-content: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            animation: slideDown 0.8s ease forwards;
+        }
+    
+        .navbar-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 1100px;
+        }
+    
+        .navbar-logo {
+            font-size: 24px;
+            font-weight: 600;
+            color: #00bfff;
+            text-decoration: none;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+    
+        .navbar-logo:hover {
+            color: #f0ecec;
+            text-shadow: 0 0 8px #00bfff;
+        }
+    
+        .navbar-links {
+            display: flex;
+            gap: 20px;
+        }
+    
+        .navbar-links a {
+            color: #f0ecec;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            position: relative;
+            transition: color 0.3s ease, transform 0.3s ease, text-shadow 0.3s ease;
+        }
+    
+        .navbar-links a::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -3px;
+            width: 100%;
+            height: 2px;
+            background: #00bfff;
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+    
+        .navbar-links a:hover {
+            color: #00bfff;
+            transform: translateY(-2px);
+            text-shadow: 0 0 8px rgba(0, 191, 255, 0.7);
+        }
+    
+        .navbar-links a:hover::after {
+            transform: scaleX(1);
+        }
+    
+        @media (max-width: 768px) {
+            .navbar-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+    
+            .navbar-links {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+        }
+    
+        /* Slide-in Animation */
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>    
+    <script src="/socket.io/socket.io.js"></script>

@@ -1,0 +1,28 @@
+<%- include('partials/header') %>
+
+<main class="container">
+    <h1>Create New Poll</h1>
+    <form action="/create" method="POST" class="poll-form" style="background-color: rgb(37, 35, 35);">
+        <input type="text" name="title" placeholder="Poll Title" required>
+        <div id="options">
+            <input type="text" name="options[]" placeholder="Option 1" required>
+            <input type="text" name="options[]" placeholder="Option 2" required>
+        </div>
+        <button type="button" onclick="addOption()" class="btn">Add Option</button>
+        <select name="duration">
+            <option value="5">5 Minutes</option>
+            <option value="60">1 Hour</option>
+            <option value="1440">1 Day</option>
+        </select>
+        <label><input type="checkbox" name="isAnonymous"> Anonymous Voting</label>
+        <input type="hidden" name="creatorId" value="<%= creatorId %>">
+        <button type="submit" class="btn">Create Poll</button>
+    </form>
+</main>
+<%- include('partials/footer') %>
+<script>
+function addOption() {
+    const div = document.getElementById('options');
+    div.innerHTML += '<input type="text" name="options[]" placeholder="New Option" required>';
+}
+</script>

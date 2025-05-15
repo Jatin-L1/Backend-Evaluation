@@ -1,0 +1,15 @@
+<%- include('partials/header') %>
+<main class="container">
+    <h1>Active Polls</h1>
+    <div class="poll-grid">
+        <% polls.forEach(poll => { %>
+            <div class="poll-card" style="background-color: rgb(37, 35, 35);">
+                <h2><%= poll.title %></h2>
+                <p>Ends: <%= poll.endTime.toLocaleString() %></p>
+                <a href="/poll/<%= poll._id %>" class="btn">View Poll</a>
+            </div>
+        <% }) %>
+    </div>
+</main>
+
+<%- include('partials/footer') %>

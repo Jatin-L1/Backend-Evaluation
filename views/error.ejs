@@ -1,0 +1,29 @@
+<%- include('partials/header') %>
+<div class="container">
+  <div class="error-container">
+    <h1>Error</h1>
+    <h2><%= title %></h2>
+    <p class="error-message"><%= message %></p>
+    <a href="javascript:history.back()" class="btn btn-primary">Go Back</a>
+    <a href="/" class="btn btn-outline-primary">Home</a>
+  </div>
+</div>
+
+<style>
+  .error-container {
+    text-align: center;
+    padding: 40px 20px;
+    max-width: 600px;
+    margin: 40px auto;
+  }
+  
+  .error-message {
+    color: #dc3545;
+    margin: 20px 0 30px;
+  }
+  
+  .btn {
+    margin: 0 10px;
+  }
+</style>
+<%- include('partials/footer') %>

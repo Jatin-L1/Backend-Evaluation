@@ -1,0 +1,694 @@
+<%- include('partials/header') %>
+<style>
+  /* Vote location notifications */
+.vote-locations {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  max-width: 350px;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex !important;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vote-location-alert {
+  background-color: rgba(0, 113, 188, 0.9);
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  animation: slideIn 0.5s ease-out;
+  transition: opacity 0.5s, transform 0.5s;
+}
+
+.vote-location-alert.fade-out {
+  opacity: 0;
+  transform: translateX(100px);
+}
+
+.location-icon {
+  font-size: 20px;
+  margin-top: 2px;
+}
+
+.location-details {
+  flex: 1;
+}
+
+.location-text {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.location-coordinates {
+  font-size: 0.8em;
+  opacity: 0.85;
+  margin-bottom: 4px;
+  font-family: monospace;
+}
+
+.voted-for {
+  font-size: 0.9em;
+  opacity: 0.9;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(50px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Notification styles for errors/success messages */
+.notification-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notification {
+  padding: 12px 20px;
+  border-radius: 8px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.notification.success {
+  background-color: rgba(40, 167, 69, 0.9);
+}
+
+.notification.error {
+  background-color: rgba(220, 53, 69, 0.9);
+}
+
+.notification.info {
+  background-color: rgba(0, 123, 255, 0.9);
+}
+
+.notification.warning {
+  background-color: rgba(255, 193, 7, 0.9);
+}
+
+.notification.fade-out {
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Vote History Section */
+.vote-history {
+  margin-top: 30px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  display: block !important; /* Force display */
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.vote-history h3 {
+  margin-top: 0;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.vote-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  background-color: #ffffff;
+  display: block !important; /* Force display */
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.vote-item {
+  display: flex !important;
+  align-items: flex-start;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 8px;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.vote-item:last-child {
+  border-bottom: none;
+}
+
+.vote-location {
+  flex: 1;
+}
+
+.vote-option {
+  font-weight: bold;
+  margin-right: 15px;
+  color: #0071bc;
+}
+
+.vote-time {
+  font-size: 0.8em;
+  color: #6c757d;
+  margin-bottom: 4px;
+}
+
+.vote-coords {
+  font-family: monospace;
+  font-size: 0.85em;
+  color: #495057;
+  background: #e9ecef;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-top: 3px;
+  margin-bottom: 3px;
+  display: inline-block;
+}
+
+.no-votes {
+  padding: 10px;
+  color: #6c757d;
+  font-style: italic;
+  text-align: center;
+}
+
+</style>
+<main class="container">
+    <h2><%= poll.title %></h2>
+    <p>Ends: <%= poll.endTime.toLocaleString() %></p>
+    <p>Time Left: <span id="timer"></span></p>
+    <p>Voting: <%= poll.isAnonymous ? 'Anonymous' : 'Public' %></p>
+    <div class="poll-options">
+        <% poll.options.forEach((opt, i) => { %>
+            <div class="option">
+                <button class="vote-btn" data-index="<%= i %>"><%= opt.text %></button>
+                <span class="votes">(<%= opt.votes %>)</span>
+            </div>
+        <% }) %>
+    </div>
+    
+    <div class="poll-share">
+        <p>Share this poll:</p>
+        <img src="<%= qrCode %>" alt="QR Code">
+        <input type="text" value="<%= shareUrl %>" readonly class="share-url">
+    </div>
+    
+    <% if (isCreator) { %>
+        <div class="export-buttons">
+            <a href="/poll/<%= poll._id %>/export/csv" class="btn">Export CSV</a>
+            <a href="/poll/<%= poll._id %>/export/pdf" class="btn">Export PDF</a>
+        </div>
+    <% } %>
+
+    <!-- Vote History Section -->
+    <div class="vote-history">
+        <h3>Recent Votes & Locations</h3>
+        <div id="vote-list" class="vote-list">
+            <div class="no-votes">No votes recorded yet.</div>
+        </div>
+    </div>
+
+    <div class="vote-locations"></div>
+</main>
+<%- include('partials/footer') %>
+
+<script>
+  let pollTimeLeft = parseInt('<%= timeLeft %>');
+  const timerElement = document.getElementById('timer');
+  
+  function updateTimer() {
+    const minutes = Math.floor(pollTimeLeft / 60);
+    const seconds = pollTimeLeft % 60;
+    timerElement.textContent = `${minutes}m ${seconds}s`;
+    if (pollTimeLeft <= 0) {
+      timerElement.textContent = 'Poll Ended';
+      document.querySelectorAll('.vote-btn').forEach(btn => btn.disabled = true);
+    } else {
+      pollTimeLeft--;
+      setTimeout(updateTimer, 1000);
+    }
+  }
+  if (pollTimeLeft > 0) {
+    updateTimer();
+  } else {
+    timerElement.textContent = 'Poll Ended';
+    document.querySelectorAll('.vote-btn').forEach(btn => btn.disabled = true);
+  }
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM fully loaded - initializing vote tracking');
+    
+    // Create vote locations container if it doesn't exist
+    let voteLocationsContainer = document.querySelector('.vote-locations');
+    if (!voteLocationsContainer) {
+      console.log('Creating vote locations container');
+      voteLocationsContainer = document.createElement('div');
+      voteLocationsContainer.className = 'vote-locations';
+      document.body.appendChild(voteLocationsContainer);
+    }
+    
+    // Get reference to vote list element
+    let voteListElement = document.getElementById('vote-list');
+    if (!voteListElement) {
+      console.log('Vote list element not found! Creating one');
+      const voteHistory = document.querySelector('.vote-history');
+      if (voteHistory) {
+        voteListElement = document.createElement('div');
+        voteListElement.id = 'vote-list';
+        voteListElement.className = 'vote-list';
+        voteHistory.appendChild(voteListElement);
+      }
+    }
+    console.log('Vote list element exists:', !!voteListElement);
+    
+    // Get poll ID from URL
+    const pollId = window.location.pathname.split('/')[2];
+    console.log('Poll ID:', pollId);
+    
+    // Connect to Socket.io
+    const socket = io();
+    
+    // Store vote history
+    const voteHistory = [];
+    
+    // Socket connection error handler
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+      showNotification('Socket connection error', 'error');
+    });
+    
+    // Function to get user's location
+    async function getUserLocation() {
+      try {
+        console.log('Getting user location...');
+        const response = await fetch('https://ipapi.co/json/');
+        if (response.ok) {
+          const locationData = await response.json();
+          console.log('Location data from API:', locationData);
+          return {
+            city: locationData.city || 'Unknown City',
+            region: locationData.region || 'Unknown Region',
+            country: locationData.country_name || 'Unknown Country',
+            latitude: locationData.latitude,
+            longitude: locationData.longitude
+          };
+        } else {
+          throw new Error('Failed to fetch location data');
+        }
+      } catch (error) {
+        console.error('Error getting IP location:', error);
+        
+        // Try browser geolocation as fallback
+        if (navigator.geolocation) {
+          return new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                resolve({
+                  latitude: position.coords.latitude,
+                  longitude: position.coords.longitude,
+                  city: 'Unknown City',
+                  country: 'Unknown Country'
+                });
+              },
+              (err) => {
+                console.warn('Browser geolocation error:', err);
+                resolve({ 
+                  city: 'Unknown Location', 
+                  country: 'Unknown',
+                  latitude: null,
+                  longitude: null
+                });
+              },
+              { timeout: 5000 }
+            );
+          });
+        } else {
+          return { 
+            city: 'Unknown Location', 
+            country: 'Unknown',
+            latitude: null,
+            longitude: null 
+          };
+        }
+      }
+    }
+    
+    // Function to display vote location notification
+    function displayVoteLocation(location, optionText) {
+      console.log('Displaying vote location notification:', location);
+      
+      try {
+        // Make sure the container exists
+        let voteLocationsContainer = document.querySelector('.vote-locations');
+        if (!voteLocationsContainer) {
+          console.log('Creating vote locations container');
+          voteLocationsContainer = document.createElement('div');
+          voteLocationsContainer.className = 'vote-locations';
+          document.body.appendChild(voteLocationsContainer);
+        }
+        
+        const locationElement = document.createElement('div');
+        locationElement.className = 'vote-location-alert';
+        
+        let locationText = location?.city || 'Unknown Location';
+        if (location?.country && location.country !== 'Unknown Country') {
+          locationText = `${location.city || 'Unknown City'}, ${location.country}`;
+        }
+        
+        // Create coordinate text if latitude and longitude are available
+        let coordinateText = '';
+        if (location?.latitude != null && location?.longitude != null) {
+          coordinateText = `<div class="location-coordinates">Coordinates: ${parseFloat(location.latitude).toFixed(4)}, ${parseFloat(location.longitude).toFixed(4)}</div>`;
+        }
+        
+        locationElement.innerHTML = `
+          <div class="location-icon">📍</div>
+          <div class="location-details">
+            <div class="location-text">Vote from ${locationText}</div>
+            ${coordinateText}
+            ${optionText ? `<div class="voted-for">Voted for: ${optionText}</div>` : ''}
+          </div>
+        `;
+        
+        voteLocationsContainer.appendChild(locationElement);
+        
+        // Remove after 8 seconds
+        setTimeout(() => {
+          locationElement.classList.add('fade-out');
+          setTimeout(() => {
+            if (locationElement.parentNode) {
+              locationElement.remove();
+            }
+          }, 500);
+        }, 8000);
+        
+        console.log('Vote location notification displayed successfully');
+      } catch (error) {
+        console.error('Error displaying vote location:', error);
+      }
+    }
+    
+    // Function to add a vote to the vote history list
+    function addVoteToHistory(voteData) {
+      console.log('Adding vote to history:', JSON.stringify(voteData));
+      
+      try {
+        // Make sure we have the vote list element
+        if (!voteListElement) {
+          console.error('Vote list element not found!');
+          // Try to get the element again
+          voteListElement = document.getElementById('vote-list');
+          if (!voteListElement) {
+            console.error('Vote list element still not found after retry');
+            
+            // Create the element if it doesn't exist
+            const voteHistory = document.querySelector('.vote-history');
+            if (voteHistory) {
+              voteListElement = document.createElement('div');
+              voteListElement.id = 'vote-list';
+              voteListElement.className = 'vote-list';
+              voteHistory.appendChild(voteListElement);
+              console.log('Created new vote list element');
+            } else {
+              console.error('Vote history container not found, cannot create vote list');
+              return;
+            }
+          }
+        }
+        
+        // Remove "no votes" message if present
+        const noVotesMsg = voteListElement.querySelector('.no-votes');
+        if (noVotesMsg) {
+          console.log('Removing "no votes" message');
+          noVotesMsg.remove();
+        }
+        
+        // Create vote item element
+        const voteItem = document.createElement('div');
+        voteItem.className = 'vote-item';
+        voteItem.style.display = 'flex'; // Force display
+        voteItem.style.visibility = 'visible';
+        voteItem.style.opacity = '1';
+        
+        // Format location display
+        let locationDisplay = 'Unknown Location';
+        if (voteData.location) {
+          if (voteData.location.city) {
+            locationDisplay = voteData.location.city;
+            if (voteData.location.country && voteData.location.country !== 'Unknown Country') {
+              locationDisplay += `, ${voteData.location.country}`;
+            }
+          }
+        }
+        
+        // Format time
+        let timeString = 'Unknown time';
+        try {
+          const voteTime = new Date(voteData.timestamp || new Date());
+          timeString = voteTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        } catch (e) {
+          console.error('Error formatting time:', e);
+        }
+        
+        // Create coordinates text
+        let coordsDisplay = '';
+        if (voteData.location?.latitude != null && voteData.location?.longitude != null) {
+          coordsDisplay = `<span class="vote-coords">${parseFloat(voteData.location.latitude).toFixed(4)}, ${parseFloat(voteData.location.longitude).toFixed(4)}</span>`;
+        }
+        
+        voteItem.innerHTML = `
+          <div class="vote-option">${voteData.optionText || 'Unknown option'}</div>
+          <div class="vote-location">
+            📍 ${locationDisplay}
+            <div>${coordsDisplay}</div>
+            <div class="vote-time">${timeString}</div>
+          </div>
+        `;
+        
+        // Add to the top of the list
+        voteListElement.insertBefore(voteItem, voteListElement.firstChild);
+        console.log('Vote added to history list successfully');
+        
+        // Store in history array (max 50 items)
+        voteHistory.unshift(voteData);
+        if (voteHistory.length > 50) {
+          voteHistory.pop();
+        }
+      } catch (error) {
+        console.error('Error in addVoteToHistory:', error);
+      }
+    }
+    
+    // Connect to socket
+    socket.on('connect', () => {
+      console.log('Connected to socket.io with ID:', socket.id);
+      
+      // Join specific poll room
+      socket.emit('joinPoll', pollId);
+      console.log('Joined poll room:', pollId);
+      
+      // Request vote history for this poll
+      socket.emit('requestVoteHistory', pollId);
+      console.log('Requested vote history for poll:', pollId);
+      
+      // Test ping to verify connection is active
+      socket.emit('ping', { timestamp: new Date().toISOString() });
+    });
+    
+    // Handle vote history from server
+    socket.on('voteHistory', (history) => {
+      console.log('Received vote history from server:', history);
+      if (Array.isArray(history) && history.length > 0) {
+        console.log(`Adding ${history.length} votes to history`);
+        history.forEach(vote => addVoteToHistory(vote));
+      } else {
+        console.log('No vote history received or history is empty');
+      }
+    });
+    
+    // Handle server ping reply
+    socket.on('pong', (data) => {
+      console.log('Server pong received:', data);
+    });
+    
+    // Listen for poll updates
+    socket.on('updatePoll', (data) => {
+      console.log('Received poll update:', data);
+      
+      // Update vote counts if available
+      if (data.options) {
+        document.querySelectorAll('.votes').forEach((span, i) => {
+          if (data.options[i]) {
+            span.textContent = `(${data.options[i].votes})`;
+          }
+        });
+      }
+      
+      // Display location if available
+      if (data.location) {
+        console.log('Poll update includes location data:', data.location);
+        let optionText = data.optionText || 'Unknown option';
+        
+        if (data.optionIndex !== undefined && !data.optionText) {
+          const options = document.querySelectorAll('.vote-btn');
+          if (options[data.optionIndex]) {
+            optionText = options[data.optionIndex].textContent;
+          }
+        }
+        
+        // Show floating notification
+        displayVoteLocation(data.location, optionText);
+        
+        // Add to permanent history
+        addVoteToHistory({
+          location: data.location,
+          optionText: optionText,
+          timestamp: data.timestamp || new Date().toISOString()
+        });
+      } else {
+        console.log('Poll update did not include location data');
+      }
+    });
+    
+    // Add special handler for direct location updates
+    socket.on('directVoteUpdate', (data) => {
+      console.log('Received direct vote update:', data);
+      if (data.location) {
+        displayVoteLocation(data.location, data.optionText);
+        addVoteToHistory(data);
+      }
+    });
+    
+    // Handle vote button clicks
+    document.querySelectorAll('.vote-btn').forEach((btn, index) => {
+      btn.addEventListener('click', async (e) => {
+        if (btn.disabled) return;
+        
+        try {
+          // Disable button to prevent multiple clicks
+          btn.disabled = true;
+          const originalText = btn.textContent;
+          btn.textContent = 'Voting...';
+          
+          // Get user's location
+          const location = await getUserLocation();
+          console.log('User location for vote:', location);
+          
+          // Send vote to server WITH location data
+          const response = await fetch(`/poll/${pollId}/vote`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              optionIndex: index,
+              location: location
+            })
+          });
+          
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Failed to vote');
+          }
+          
+          const data = await response.json();
+          console.log('Vote response:', data);
+          
+          // Disable all buttons
+          document.querySelectorAll('.vote-btn').forEach(button => {
+            button.disabled = true;
+          });
+          
+          // Change text back
+          btn.textContent = 'Voted';
+          
+          // Also emit via socket as a backup
+          socket.emit('vote', {
+            pollId,
+            optionIndex: index,
+            location: location,
+            optionText: originalText
+          });
+          
+          // Test display directly
+          displayVoteLocation(location, originalText);
+          addVoteToHistory({
+            location: location,
+            optionText: originalText,
+            timestamp: new Date().toISOString()
+          });
+          
+          showNotification('Vote recorded successfully!', 'success');
+          
+        } catch (error) {
+          console.error('Error voting:', error);
+          btn.disabled = false;
+          btn.textContent = btn.getAttribute('data-original-text') || 'Vote';
+          showNotification(error.message || 'Error voting', 'error');
+        }
+      });
+      
+      // Store original text
+      btn.setAttribute('data-original-text', btn.textContent);
+    });
+    
+    // Show notification
+    function showNotification(message, type = 'info') {
+      let container = document.querySelector('.notification-container');
+      if (!container) {
+        container = document.createElement('div');
+        container.className = 'notification-container';
+        document.body.appendChild(container);
+      }
+      
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.textContent = message;
+      
+      container.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.classList.add('fade-out');
+        setTimeout(() => notification.remove(), 300);
+      }, 4000);
+    }
+    
+    // Add test display after a short delay
+    setTimeout(() => {
+      console.log('Adding test vote display');
+      const testLocation = {
+        city: 'Test City',
+        country: 'Test Country',
+        latitude: 12.3456,
+        longitude: 78.9012
+      };
+      
+      displayVoteLocation(testLocation, 'Test Option');
+      addVoteToHistory({
+        location: testLocation,
+        optionText: 'Test Option',
+        timestamp: new Date().toISOString()
+      });
+      
+      showNotification('Test vote displayed', 'info');
+    }, 2000);
+  });
+</script>

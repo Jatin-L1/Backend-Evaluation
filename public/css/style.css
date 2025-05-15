@@ -1,0 +1,543 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    background: #f4f7fa;
+    color: #333;
+    line-height: 1.6;
+    min-height: 100vh; /* Full viewport height */
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    flex-grow: 1; /* Allows the container to stretch naturally */
+}
+
+h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #007bff;
+}
+
+p {
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.poll-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.poll-card {
+    background: white;
+    padding: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
+
+.poll-card:hover {
+    transform: translateY(-5px);
+}
+
+.poll-form {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.poll-form input,
+.poll-form select {
+    width: 100%;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.poll-options {
+    margin: 1.5rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.vote-btn {
+    background: #007bff;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.3s;
+}
+
+.vote-btn:hover:not(:disabled) {
+    background: #0056b3;
+}
+
+.vote-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.votes {
+    font-size: 1rem;
+    color: #666;
+}
+
+.poll-share {
+    margin: 1.5rem 0;
+    text-align: center;
+}
+
+.poll-share p {
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.poll-share img {
+    max-width: 150px;
+    margin: 0.5rem 0;
+}
+
+.share-url {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.export-buttons {
+    margin-top: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.btn {
+    background: #28a745;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: background 0.3s;
+}
+
+.btn:hover {
+    background: #218838;
+}
+
+.navbar {
+    background: #007bff;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    color: white;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+/* Footer (Not sticky anymore) */
+footer {
+    text-align: center;
+    padding: 1rem;
+    background: #000000;
+    color: white;
+    margin-top: 2rem;
+}
+.site-footer {
+    background-color: #111; /* Deep black for premium feel */
+    color: #f0f0f0;
+    padding: 40px 20px;
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    border-top: 4px solid #007bff; /* Signature blue accent */
+}
+
+/* Layout for inner content */
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+/* Section Headers */
+.footer-section h2,
+.footer-section h3 {
+    font-size: 18px;
+    margin-bottom: 12px;
+    font-weight: 600;
+    color: #fff; /* White for sharp contrast */
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Brand Section */
+.footer-section.brand h2 {
+    font-size: 24px;
+    color: #007bff; /* Blue accent for branding */
+    font-weight: bold;
+}
+
+.footer-section.brand p {
+    color: #ccc;
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+/* Quick Links & Social Links */
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 8px;
+}
+
+.footer-section ul li a {
+    color: #bbb;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s ease;
+}
+
+.footer-section ul li a:hover {
+    color: #007bff; /* Hover effect */
+}
+
+/* Contact Info */
+.footer-section.contact p {
+    margin: 4px 0;
+    font-size: 14px;
+    color: #ccc;
+}
+
+/* Social Links */
+.footer-section.social ul {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.footer-section.social ul li a {
+    font-weight: 500;
+}
+
+/* Footer Bottom */
+.footer-bottom {
+    text-align: center;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 14px;
+    color: #bbb;
+}
+
+.footer-bottom a {
+    color: #007bff;
+    text-decoration: none;
+    margin: 0 6px;
+    transition: color 0.3s ease;
+}
+
+.footer-bottom a:hover {
+    color: #fff;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+    .footer-content {
+        grid-template-columns: 1fr; /* Full width stacking */
+        gap: 16px;
+    }
+
+    .footer-section {
+        text-align: center; /* Center-align for mobile */
+    }
+
+    .footer-section.social ul {
+        flex-direction: row;
+        justify-content: center;
+        gap: 16px;
+    }
+}
+
+
+/* Admin Page Styles */
+.admin-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.admin-title {
+    font-size: 2.2rem;
+    color: #343a40;
+    font-weight: 700;
+}
+
+.admin-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    color: #007bff;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 1rem;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.admin-table th {
+    background: #f8f9fa;
+    font-weight: bold;
+    color: #495057;
+}
+
+.admin-table tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-edit {
+    background: #ffc107;
+    color: #212529;
+}
+
+.btn-edit:hover {
+    background: #e0a800;
+}
+
+.btn-delete {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-delete:hover {
+    background: #c82333;
+}
+
+.admin-action-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.3s;
+}
+
+.admin-form {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #212529;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    transition: border-color 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: #007bff;
+    outline: none;
+}
+/* create-poll */
+/* Main Container */
+.container {
+    background-color: #111; /* Sleek black container */
+    color: #f0f0f0; /* Light text for contrast */
+    max-width: 600px; /* Centered & not too wide */
+    margin: 40px auto;
+    padding: 30px 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    border: 2px solid #007bff; /* PollMaster Blue Accent */
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Heading */
+.container h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #007bff; /* Brand touch */
+}
+
+/* Form Inputs */
+.poll-form input[type="text"],
+.poll-form select {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: 1px solid #444;
+    background-color: #222;
+    color: #f0f0f0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.poll-form input[type="text"]:focus,
+.poll-form select:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+/* Options Wrapper */
+#options input {
+    display: block;
+}
+
+/* Buttons */
+.btn {
+    background-color: #007bff; /* Primary Action Color */
+    color: #fff;
+    padding: 10px 16px;
+    margin-top: 10px;
+    border: none;
+    cursor: pointer;
+    border-radius: 6px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #0056b3; /* Slightly darker blue */
+}
+
+/* Checkbox */
+.poll-form label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    margin: 12px 0;
+    color: #ccc;
+}
+
+.poll-form input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #007bff;
+}
+
+/* Hidden Input (just to make sure it blends) */
+.poll-form input[type="hidden"] {
+    display: none;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .container {
+        padding: 20px 15px;
+        margin: 20px auto;
+    }
+
+    .btn {
+        width: 100%; /* Full-width buttons on smaller screens */
+    }
+}
