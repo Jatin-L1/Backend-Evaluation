@@ -12,6 +12,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
 const pollRoutes = require('./src/routes/pollRoutes');
+const Vote = require('./src/models/voteModel');
 require('dotenv').config();
 
 process.on('uncaughtException', err => {
@@ -32,12 +33,12 @@ const io = socketIo(server, {
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// IMPORTANT: Helmet configuration with proper CSP to allow ipapi.co
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdn.jsdelivr.net"],
+      scriptSrcAttr: ["'unsafe-inline'"],
       connectSrc: ["'self'", "https://ipapi.co", "wss://*", "ws://*", "*"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
       imgSrc: ["'self'", "data:"],
@@ -99,40 +100,96 @@ if (!fs.existsSync(tmpDir)) {
 // Store vote history for each poll
 const voteHistory = {};
 
+// Function to fetch votes from MongoDB
+async function getVotesFromDB(pollId) {
+  try {
+    console.log(`Fetching votes from MongoDB for poll ${pollId}`);
+    
+    const votes = await Vote.find({ pollId })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .lean();
+    
+    console.log(`Retrieved ${votes.length} votes from MongoDB for poll ${pollId}`);
+    
+    // Format the votes for client with explicit property access
+    const formattedVotes = votes.map(vote => {
+      console.log('Processing vote:', JSON.stringify(vote));
+      
+      return {
+        pollId: vote.pollId ? vote.pollId.toString() : pollId,
+        optionIndex: vote.optionIndex,
+        optionText: vote.optionText || 'Unknown option',
+        location: {
+          city: vote.location?.city || 'Unknown City',
+          country: vote.location?.country || 'Unknown Country',
+          latitude: vote.location?.latitude || null,
+          longitude: vote.location?.longitude || null
+        },
+        timestamp: vote.createdAt || new Date().toISOString()
+      };
+    });
+    
+    console.log(`Formatted ${formattedVotes.length} votes for client`);
+    return formattedVotes;
+  } catch (err) {
+    console.error(`Error fetching votes from MongoDB for poll ${pollId}:`, err);
+    return [];
+  }
+}
+
 // Socket.io connection handler with proper vote tracking
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
   
-  // Store socket ID in cookie through client-side code
-  socket.emit('setSocketId', { socketId: socket.id });
-  
-  socket.on('joinPoll', (pollId) => {
-    socket.join(pollId); 
+  socket.on('joinPoll', async (pollId) => {
+    socket.join(pollId);
     console.log(`Client ${socket.id} joined poll: ${pollId}`);
     
-    // Send vote history to the client for this poll
-    if (voteHistory[pollId] && voteHistory[pollId].length > 0) {
-      console.log(`Sending ${voteHistory[pollId].length} votes to client for poll ${pollId}`);
-      socket.emit('voteHistory', voteHistory[pollId]);
-    } else {
-      console.log(`No vote history to send for poll ${pollId}`);
+    try {
+      // Always fetch fresh votes from database on join
+      const dbVotes = await getVotesFromDB(pollId);
+      
+      if (dbVotes && dbVotes.length > 0) {
+        console.log(`Sending ${dbVotes.length} votes to client ${socket.id} for poll ${pollId}`);
+        socket.emit('voteHistory', dbVotes);
+        
+        // Update memory cache
+        voteHistory[pollId] = dbVotes;
+      } else {
+        console.log(`No votes found for poll ${pollId}`);
+        socket.emit('voteHistory', []);
+      }
+    } catch (error) {
+      console.error(`Error getting votes for poll ${pollId}:`, error);
       socket.emit('voteHistory', []);
     }
   });
   
-  // Add a handler for vote history requests
-  socket.on('requestVoteHistory', (pollId) => {
-    if (voteHistory[pollId]) {
-      console.log(`Sending ${voteHistory[pollId].length} votes to client on request for poll ${pollId}`);
-      socket.emit('voteHistory', voteHistory[pollId]);
-    } else {
-      console.log(`No vote history available for poll ${pollId} on request`);
+  socket.on('requestVoteHistory', async (pollId) => {
+    try {
+      console.log(`Client ${socket.id} requested vote history for poll ${pollId}`);
+      
+      // Always fetch fresh from database
+      const dbVotes = await getVotesFromDB(pollId);
+      
+      if (dbVotes && dbVotes.length > 0) {
+        // Update memory for future use
+        voteHistory[pollId] = dbVotes;
+        console.log(`Sending ${dbVotes.length} votes from database for poll ${pollId}`);
+        socket.emit('voteHistory', dbVotes);
+      } else {
+        console.log(`No votes found in database for poll ${pollId}`);
+        socket.emit('voteHistory', []);
+      }
+    } catch (error) {
+      console.error(`Error handling requestVoteHistory for poll ${pollId}:`, error);
       socket.emit('voteHistory', []);
     }
   });
   
   socket.on('vote', (data) => {
-    console.log(`Socket vote event received`);
+    console.log(`Socket vote event received from ${socket.id}`);
     
     if (!data.location) {
       console.log('Warning: Vote received without location data');
@@ -172,20 +229,26 @@ io.on('connection', (socket) => {
       
       // Broadcast to all clients in the poll room
       io.to(data.pollId).emit('updatePoll', voteRecord);
-      console.log('Emitted updatePoll with location data to room:', data.pollId);
+      
+      // Also send a direct confirmation to the client
+      socket.emit('voteConfirmed', voteRecord);
     }
+  });
+  
+  // Handle pings for connection testing
+  socket.on('ping', (data) => {
+    socket.emit('pong', { 
+      received: data, 
+      serverTime: new Date().toISOString() 
+    });
   });
   
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });
-  
-  socket.on('error', (error) => {
-    console.error('Socket error:', error);
-  });
 });
 
-app.use('/', pollRoutes(io)); 
+app.use('/', pollRoutes(io));
 
 app.all('*', (req, res, next) => {
   const err = new Error(`Can't find ${req.originalUrl} on this server!`);
